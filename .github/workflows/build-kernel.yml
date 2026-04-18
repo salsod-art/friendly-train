@@ -20,12 +20,14 @@ jobs:
           git clone --depth 1 -b chromeos-5.15 \
             https://chromium.googlesource.com/chromiumos/third_party/kernel \
             kernel
-          cd kernel
+
+      - name: List available defconfigs
+        run: ls kernel/arch/x86/configs/
 
       - name: Configure for x86_64 ChromeOS
         run: |
           cd kernel
-          make chromeos_defconfig ARCH=x86_64
+          make x86_64_chromiumos_defconfig ARCH=x86_64
 
       - name: Build kernel
         run: |
@@ -37,6 +39,6 @@ jobs:
         with:
           name: octopus-kernel-5.15
           path: |
-            kernel/arch/x86_64/boot/bzImage
+            kernel/arch/x86/boot/bzImage
             kernel/build.log
           retention-days: 7
