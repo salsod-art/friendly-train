@@ -1,0 +1,42 @@
+name: Build ChromiumOS 5.15 Kernel for Octopus
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libncurses-dev bison flex \
+            libssl-dev libelf-dev bc git curl wget python3 cpio
+
+      - name: Clone ChromiumOS 5.15 kernel
+        run: |
+          git clone --depth 1 -b chromeos-5.15 \
+            https://chromium.googlesource.com/chromiumos/third_party/kernel \
+            kernel
+          cd kernel
+
+      - name: Configure for x86_64 ChromeOS
+        run: |
+          cd kernel
+          make chromeos_defconfig ARCH=x86_64
+
+      - name: Build kernel
+        run: |
+          cd kernel
+          make -j$(nproc) ARCH=x86_64 bzImage modules 2>&1 | tee build.log
+
+      - name: Upload kernel artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: octopus-kernel-5.15
+          path: |
+            kernel/arch/x86_64/boot/bzImage
+            kernel/build.log
+          retention-days: 7
